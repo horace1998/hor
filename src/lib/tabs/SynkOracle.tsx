@@ -123,15 +123,29 @@ function PrismHold({ onReveal }: { onReveal: () => void }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    let interval: any;
+    let frameId: number;
     if (isHolding) {
-      interval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 1.5, 100));
-      }, 15);
+      const startTime = Date.now();
+      const duration = 1000; // Exactly 1 second (1000ms)
+
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const currentProgress = Math.min((elapsed / duration) * 100, 100);
+        setProgress(currentProgress);
+
+        if (currentProgress < 100) {
+          frameId = requestAnimationFrame(animate);
+        }
+      };
+      
+      frameId = requestAnimationFrame(animate);
     } else {
       setProgress(0);
     }
-    return () => clearInterval(interval);
+    
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+    };
   }, [isHolding]);
 
   useEffect(() => {
@@ -143,12 +157,14 @@ function PrismHold({ onReveal }: { onReveal: () => void }) {
   return (
     <div className="relative flex flex-col items-center gap-10 py-8">
       <div 
-        className="relative w-48 h-48 flex items-center justify-center cursor-pointer select-none group"
+        className="relative w-48 h-48 flex items-center justify-center cursor-pointer select-none group touch-none [-webkit-touch-callout:none]"
         onMouseDown={() => setIsHolding(true)}
         onMouseUp={() => setIsHolding(false)}
         onMouseLeave={() => setIsHolding(false)}
         onTouchStart={() => setIsHolding(true)}
         onTouchEnd={() => setIsHolding(false)}
+        onTouchCancel={() => setIsHolding(false)}
+        onContextMenu={(e) => e.preventDefault()}
       >
         {/* Progress Halo */}
         <svg className="absolute inset-0 w-full h-full -rotate-90">

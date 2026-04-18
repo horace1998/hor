@@ -1,14 +1,15 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { Sparkles, Vault, Zap, Archive as ArchiveIcon, Fingerprint, Gem } from "lucide-react";
 import { cn } from "./utils";
-import RitualDashboard from "./tabs/RitualDashboard";
-import GoalVault from "./tabs/GoalVault";
-import SynkOracle from "./tabs/SynkOracle";
-import Archive from "./tabs/Archive";
-import IdentityCard from "./tabs/IdentityCard";
-import TheChronicle from "./tabs/TheChronicle";
 import { useSYNK } from "./Store";
 import { motion, AnimatePresence } from "motion/react";
+
+// Lazy load tabs to dramatically decrease initial bundle size and boost rendering speed
+const RitualDashboard = lazy(() => import("./tabs/RitualDashboard"));
+const GoalVault = lazy(() => import("./tabs/GoalVault"));
+const SynkOracle = lazy(() => import("./tabs/SynkOracle"));
+const IdentityCard = lazy(() => import("./tabs/IdentityCard"));
+const TheChronicle = lazy(() => import("./tabs/TheChronicle"));
 
 const TABS = [
   { id: "ritual", label: "PORTAL", subLabel: "共鳴中心", icon: Sparkles },
@@ -178,11 +179,13 @@ export default function AppLayout() {
               exit="exit"
               className="w-full h-full"
             >
-              {activeTab === "ritual" && <RitualDashboard />}
-              {activeTab === "vault" && <GoalVault />}
-              {activeTab === "oracle" && <SynkOracle />}
-              {activeTab === "chronicle" && <TheChronicle />}
-              {activeTab === "identity" && <IdentityCard />}
+              <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-[10px] text-white/30 tracking-[0.5em] uppercase">Calibrating...</div>}>
+                {activeTab === "ritual" && <RitualDashboard />}
+                {activeTab === "vault" && <GoalVault />}
+                {activeTab === "oracle" && <SynkOracle />}
+                {activeTab === "chronicle" && <TheChronicle />}
+                {activeTab === "identity" && <IdentityCard />}
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </div>
